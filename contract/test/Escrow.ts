@@ -103,4 +103,81 @@ describe("Escrow", function () {
       );
     });
   });
+
+  describe("Complete Sale", function () {
+    it("Should allow the arbiter to complete the sale and transfer funds to the seller", async function () {
+      const { escrow, buyer, arbiter, seller, contractAmount } =
+        await deployEscrowFixture();
+
+      await escrow.connect(buyer).deposit({ value: contractAmount });
+      await escrow.connect(buyer).confirmDelivery();
+
+      await expect(
+        escrow.connect(arbiter).completeSale()
+      ).to.changeEtherBalances(
+        [seller, escrow],
+        [contractAmount, -contractAmount]
+      );
+
+      expect(await escrow.currentState()).to.equal(3); // State.COMPLETE_SALE
+    });
+
+    it("Should revert if not called by arbiter", async function () {
+      const { escrow, buyer, seller, contractAmount } =
+        await deployEscrowFixture();
+
+      await escrow.connect(buyer).deposit({ value: contractAmount });
+      await escrow.connect(buyer).confirmDelivery();
+
+      await expect(escrow.connect(seller).completeSale()).to.be.revertedWith(
+        "Only arbiter can call this method"
+      );
+    });
+  });
+
+  describe("Refund Buyer", function () {
+    it("Should allow the arbiter to refund the buyer", async function () {
+      const { escrow, buyer, arbiter, contractAmount } =
+        await deployEscrowFixture();
+
+      await escrow.connect(buyer).deposit({ value: contractAmount });
+
+      await expect(
+        escrow.connect(arbiter).refundBuyer()
+      ).to.changeEtherBalances(
+        [buyer, escrow],
+        [contractAmount, -contractAmount]
+      );
+
+      expect(await escrow.currentState()).to.equal(4); // State.CANCELED_SALE
+    });
+
+    it("Should revert if not called by arbiter", async function () {
+      const { escrow, buyer, seller, arbiter, contractAmount } =
+        await deployEscrowFixture();
+
+      await escrow.connect(buyer).deposit({ value: contractAmount });
+
+      await expect(escrow.connect(seller).refundBuyer()).to.be.revertedWith(
+        "Only arbiter can call this method"
+      );
+    });
+
+    it("Should revert if not in the correct state", async function () {
+      const { escrow, buyer, arbiter, contractAmount } =
+        await deployEscrowFixture();
+
+      await expect(escrow.connect(arbiter).refundBuyer()).to.be.revertedWith(
+        "The deal is in the incorrect state"
+      );
+
+      await escrow.connect(buyer).deposit({ value: contractAmount });
+      await escrow.connect(buyer).confirmDelivery();
+      await escrow.connect(arbiter).completeSale();
+
+      await expect(escrow.connect(arbiter).refundBuyer()).to.be.revertedWith(
+        "The deal is in the incorrect state"
+      );
+    });
+  });
 });
