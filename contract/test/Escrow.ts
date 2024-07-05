@@ -46,4 +46,38 @@ describe("Escrow", function () {
       expect(await escrow.currentState()).to.equal(0); // State.AWAITING_PAYMENT
     });
   });
+
+  describe("Deposits", function () {
+    it("Should allow the buyer to deposit the correct amount", async function () {
+      const { escrow, buyer, contractAmount } = await deployEscrowFixture();
+
+      await expect(
+        escrow.connect(buyer).deposit({ value: contractAmount })
+      ).to.changeEtherBalances(
+        [buyer, escrow],
+        [-contractAmount, contractAmount]
+      );
+
+      expect(await escrow.currentState()).to.equal(1); // State.AWAITING_DELIVERY
+    });
+
+    it("Should revert if deposit amount is incorrect", async function () {
+      const { escrow, buyer } = await deployEscrowFixture();
+      const incorrectAmount = 5 * ONE_GWEI;
+
+      await expect(
+        escrow.connect(buyer).deposit({ value: incorrectAmount })
+      ).to.be.revertedWith(
+        "The amount sent is not equal to the amount of the contract"
+      );
+    });
+
+    it("Should revert if not called by buyer", async function () {
+      const { escrow, seller, contractAmount } = await deployEscrowFixture();
+
+      await expect(
+        escrow.connect(seller).deposit({ value: contractAmount })
+      ).to.be.revertedWith("Only buyer can call this method");
+    });
+  });
 });
