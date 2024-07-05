@@ -79,6 +79,20 @@ contract Escrow {
         currentState = State.CANCELED_SALE;
     }
 
+    function getSaleDetails() 
+        external 
+        view 
+        returns (
+            address payable, 
+            address payable, 
+            address, 
+            uint, 
+            State
+        ) 
+    {
+        return (buyer, seller, arbiter, contractAmount, currentState);
+    }
+
     function sendEth(address payable _to, uint _amount) private {
         (bool success, ) = address(_to).call{value: _amount}("");
         require(success, "Failed to send Ether");

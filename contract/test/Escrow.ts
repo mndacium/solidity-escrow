@@ -1,10 +1,4 @@
-import {
-  time,
-  loadFixture,
-} from "@nomicfoundation/hardhat-toolbox/network-helpers";
-import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { expect } from "chai";
-import hre from "hardhat";
 import { ethers } from "hardhat";
 
 describe("Escrow", function () {
@@ -178,6 +172,82 @@ describe("Escrow", function () {
       await expect(escrow.connect(arbiter).refundBuyer()).to.be.revertedWith(
         "The deal is in the incorrect state"
       );
+    });
+  });
+
+  describe("Get Sale Details", function () {
+    it("Should return the correct sale details for newly created contract", async function () {
+      const { escrow, buyer, seller, arbiter, contractAmount } =
+        await deployEscrowFixture();
+
+      const saleDetails = await escrow.getSaleDetails();
+
+      expect(saleDetails[0]).to.equal(buyer.address);
+      expect(saleDetails[1]).to.equal(seller.address);
+      expect(saleDetails[2]).to.equal(arbiter.address);
+      expect(saleDetails[3]).to.equal(contractAmount);
+      expect(saleDetails[4]).to.equal(0); // State.AWAITING_PAYMENT
+    });
+
+    it("Should return the correct sale details when the buyer has made deposit", async function () {
+      const { escrow, buyer, seller, arbiter, contractAmount } =
+        await deployEscrowFixture();
+
+      await escrow.connect(buyer).deposit({ value: contractAmount });
+      const saleDetails = await escrow.getSaleDetails();
+
+      expect(saleDetails[0]).to.equal(buyer.address);
+      expect(saleDetails[1]).to.equal(seller.address);
+      expect(saleDetails[2]).to.equal(arbiter.address);
+      expect(saleDetails[3]).to.equal(contractAmount);
+      expect(saleDetails[4]).to.equal(1); // State.AWAITING_DELIVERY
+    });
+
+    it("Should return the correct sale details when the buyer has confirmed delivery", async function () {
+      const { escrow, buyer, seller, arbiter, contractAmount } =
+        await deployEscrowFixture();
+
+      await escrow.connect(buyer).deposit({ value: contractAmount });
+      await escrow.connect(buyer).confirmDelivery();
+      const saleDetails = await escrow.getSaleDetails();
+
+      expect(saleDetails[0]).to.equal(buyer.address);
+      expect(saleDetails[1]).to.equal(seller.address);
+      expect(saleDetails[2]).to.equal(arbiter.address);
+      expect(saleDetails[3]).to.equal(contractAmount);
+      expect(saleDetails[4]).to.equal(2); // State.COMPLETE_DELIVERY
+    });
+
+    it("Should return the correct sale details when the arbiter has completed sale", async function () {
+      const { escrow, buyer, seller, arbiter, contractAmount } =
+        await deployEscrowFixture();
+
+      await escrow.connect(buyer).deposit({ value: contractAmount });
+      await escrow.connect(buyer).confirmDelivery();
+      await escrow.connect(arbiter).completeSale();
+      const saleDetails = await escrow.getSaleDetails();
+
+      expect(saleDetails[0]).to.equal(buyer.address);
+      expect(saleDetails[1]).to.equal(seller.address);
+      expect(saleDetails[2]).to.equal(arbiter.address);
+      expect(saleDetails[3]).to.equal(contractAmount);
+      expect(saleDetails[4]).to.equal(3); // State.COMPLETE_SALE
+    });
+
+    it("Should return the correct sale details when the arbiter has canceled sale", async function () {
+      const { escrow, buyer, seller, arbiter, contractAmount } =
+        await deployEscrowFixture();
+
+      await escrow.connect(buyer).deposit({ value: contractAmount });
+      await escrow.connect(buyer).confirmDelivery();
+      await escrow.connect(arbiter).refundBuyer();
+      const saleDetails = await escrow.getSaleDetails();
+
+      expect(saleDetails[0]).to.equal(buyer.address);
+      expect(saleDetails[1]).to.equal(seller.address);
+      expect(saleDetails[2]).to.equal(arbiter.address);
+      expect(saleDetails[3]).to.equal(contractAmount);
+      expect(saleDetails[4]).to.equal(4); // State.CANCELED_SALE
     });
   });
 });
