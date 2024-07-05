@@ -80,4 +80,27 @@ describe("Escrow", function () {
       ).to.be.revertedWith("Only buyer can call this method");
     });
   });
+
+  describe("Delivery Confirmation", function () {
+    it("Should allow the buyer to confirm delivery", async function () {
+      const { escrow, buyer, contractAmount } = await deployEscrowFixture();
+
+      await escrow.connect(buyer).deposit({ value: contractAmount });
+
+      await escrow.connect(buyer).confirmDelivery();
+
+      expect(await escrow.currentState()).to.equal(2); // State.COMPLETE_DELIVERY
+    });
+
+    it("Should revert if not called by buyer", async function () {
+      const { escrow, buyer, seller, contractAmount } =
+        await deployEscrowFixture();
+
+      await escrow.connect(buyer).deposit({ value: contractAmount });
+
+      await expect(escrow.connect(seller).confirmDelivery()).to.be.revertedWith(
+        "Only buyer can call this method"
+      );
+    });
+  });
 });
