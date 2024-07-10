@@ -7,5 +7,6 @@ import { Web3Module } from 'src/web3';
   imports: [Web3Module],
   controllers: [EscrowFactoryController],
   providers: [EscrowFactoryService],
+  exports: [EscrowFactoryService],
 })
 export class EscrowFactoryModule {}

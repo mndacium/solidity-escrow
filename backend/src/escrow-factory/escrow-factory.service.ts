@@ -24,10 +24,6 @@ export class EscrowFactoryService {
     );
 
     try {
-      const gasEstimate = await factory.methods
-        .createEscrow(buyer, seller, arbiter, contractAmount)
-        .estimateGas({ from: '0x3bEd82dd1408393f439E282BA5F0985223eb2d7A' });
-
       const createEscrowTx = factory.methods.createEscrow(
         buyer,
         seller,
@@ -37,14 +33,12 @@ export class EscrowFactoryService {
 
       const createTransaction = await this.web3.eth.accounts.signTransaction(
         {
-          from: this.configService.getOrThrow('ARBITER_WALLET'),
+          from: arbiter,
           to: this.configService.getOrThrow('ESCROW_FACTORY_ADDRESS'),
           data: createEscrowTx.encodeABI(),
           gas: await createEscrowTx.estimateGas(),
           gasPrice: await this.web3.eth.getGasPrice(),
-          nonce: await this.web3.eth.getTransactionCount(
-            this.configService.getOrThrow('ARBITER_WALLET'),
-          ),
+          nonce: await this.web3.eth.getTransactionCount(arbiter),
         },
         this.configService.getOrThrow('ARBITER_PRIVATE_KEY'),
       );
@@ -58,16 +52,12 @@ export class EscrowFactoryService {
     }
   }
 
-  async getEscrows() {
+  async getEscrows(): Promise<string[]> {
     const factory = new this.web3.eth.Contract(
       EscrowFactoryAbi,
       this.configService.getOrThrow('ESCROW_FACTORY_ADDRESS'),
     );
 
-    try {
-      return await factory.methods.getEscrowContracts().call();
-    } catch (err) {
-      console.log(err);
-    }
+    return await factory.methods.getEscrowContracts().call();
   }
 }
