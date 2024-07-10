@@ -17,8 +17,8 @@ import { Web3Service } from './web3.service';
       provide: 'Config',
       useFactory: (configService: ConfigService) => {
         return {
-          wallet: configService.get('WALLET'),
-          privateKey: configService.get('PRIVATE_KEY'),
+          wallet: configService.get('ARBITER_WALLET'),
+          privateKey: configService.get('ARBITER_PRIVATE_KEY'),
         };
       },
       inject: [ConfigService],
