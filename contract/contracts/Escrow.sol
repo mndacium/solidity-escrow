@@ -1,6 +1,26 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.24;
 
+contract EscrowFactory {
+    address[] public escrowContracts;
+
+    function createEscrow(
+        address payable _buyer,
+        address payable _seller,
+        address _arbiter,
+        uint _contractAmount
+    ) public {
+        address newEscrow = address(
+            new Escrow(_buyer, _seller, _arbiter, _contractAmount)
+        );
+        escrowContracts.push(newEscrow);
+    }
+
+    function getEscrowContracts() public view returns (address[] memory) {
+        return escrowContracts;
+    }
+}
+
 contract Escrow {
     enum State {
         AWAITING_PAYMENT,
@@ -79,16 +99,10 @@ contract Escrow {
         currentState = State.CANCELED_SALE;
     }
 
-    function getSaleDetails() 
-        external 
-        view 
-        returns (
-            address payable, 
-            address payable, 
-            address, 
-            uint, 
-            State
-        ) 
+    function getSaleDetails()
+        external
+        view
+        returns (address payable, address payable, address, uint, State)
     {
         return (buyer, seller, arbiter, contractAmount, currentState);
     }
