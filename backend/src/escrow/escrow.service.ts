@@ -15,6 +15,39 @@ export class EscrowService {
 
   web3 = this.web3Service.getWeb3();
 
+  async deposit(buyer: string, escrowAddress: string, amount: number) {
+    try {
+      const escrow = await this.getEscrowContract(escrowAddress);
+
+      const depositTx = await escrow.methods.deposit();
+
+      console.log(amount);
+
+      const depositTransaction = await this.web3.eth.accounts.signTransaction(
+        {
+          from: buyer,
+          to: escrowAddress,
+          data: depositTx.encodeABI(),
+          value: amount,
+          gas: await depositTx.estimateGas({
+            from: buyer,
+            value: this.web3.utils.toHex(amount),
+          }),
+          gasPrice: await this.web3.eth.getGasPrice(),
+          nonce: await this.web3.eth.getTransactionCount(buyer),
+        },
+        this.configService.getOrThrow('BUYER_PRIVATE_KEY'),
+      );
+
+      const depositReceipt = await this.web3.eth.sendSignedTransaction(
+        depositTransaction.rawTransaction,
+      );
+      console.log(`Tx successful with hash: ${depositReceipt.transactionHash}`);
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
   async getSaleDetails(escrowAddress: string) {
     try {
       const escrow = await this.getEscrowContract(escrowAddress);
