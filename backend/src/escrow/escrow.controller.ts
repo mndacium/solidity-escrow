@@ -58,6 +58,43 @@ export class EscrowController {
   }
 
   @ApiParam({ name: 'address' })
+  @Post(':address/complete-sale')
+  async completeSale(
+    @Param() { address }: AddressParamDto,
+    @Body() completeSaleRequest: RequestWithUserDto,
+  ): Promise<string> {
+    try {
+      return await this.escrowService.completeSale(
+        completeSaleRequest,
+        address,
+      );
+    } catch (error) {
+      if (error instanceof ContractNotFoundError) {
+        throw new NotFoundException(error.message);
+      }
+
+      throw error;
+    }
+  }
+
+  @ApiParam({ name: 'address' })
+  @Post(':address/refund-buyer')
+  async refundBuyer(
+    @Param() { address }: AddressParamDto,
+    @Body() refundBuyerRequest: RequestWithUserDto,
+  ): Promise<string> {
+    try {
+      return await this.escrowService.refundBuyer(refundBuyerRequest, address);
+    } catch (error) {
+      if (error instanceof ContractNotFoundError) {
+        throw new NotFoundException(error.message);
+      }
+
+      throw error;
+    }
+  }
+
+  @ApiParam({ name: 'address' })
   @Get(':address')
   async getSaleDetails(
     @Param() { address }: AddressParamDto,

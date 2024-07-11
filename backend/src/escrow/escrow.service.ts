@@ -76,6 +76,63 @@ export class EscrowService {
     return receipt.transactionHash.toString();
   }
 
+  async completeSale(
+    { userAddress: arbiter }: RequestWithUserDto,
+    escrowAddress: string,
+  ) {
+    const escrow = await this.getEscrowContract(escrowAddress);
+
+    const transactionData = await escrow.methods.completeSale();
+
+    const signedTransaction = await this.web3.eth.accounts.signTransaction(
+      {
+        from: arbiter,
+        to: escrowAddress,
+        data: transactionData.encodeABI(),
+        gas: await transactionData.estimateGas({
+          from: arbiter,
+        }),
+        gasPrice: await this.web3.eth.getGasPrice(),
+        nonce: await this.web3.eth.getTransactionCount(arbiter),
+      },
+      this.configService.getOrThrow('ARBITER_PRIVATE_KEY'),
+    );
+
+    const receipt = await this.web3.eth.sendSignedTransaction(
+      signedTransaction.rawTransaction,
+    );
+
+    return receipt.transactionHash.toString();
+  }
+
+  async refundBuyer(
+    { userAddress: arbiter }: RequestWithUserDto,
+    escrowAddress: string,
+  ) {
+    const escrow = await this.getEscrowContract(escrowAddress);
+
+    const transactionData = await escrow.methods.refundBuyer();
+    const signedTransaction = await this.web3.eth.accounts.signTransaction(
+      {
+        from: arbiter,
+        to: escrowAddress,
+        data: transactionData.encodeABI(),
+        gas: await transactionData.estimateGas({
+          from: arbiter,
+        }),
+        gasPrice: await this.web3.eth.getGasPrice(),
+        nonce: await this.web3.eth.getTransactionCount(arbiter),
+      },
+      this.configService.getOrThrow('ARBITER_PRIVATE_KEY'),
+    );
+
+    const receipt = await this.web3.eth.sendSignedTransaction(
+      signedTransaction.rawTransaction,
+    );
+
+    return receipt.transactionHash.toString();
+  }
+
   async getSaleDetails(escrowAddress: string): Promise<SaleDetailsDto> {
     const escrow = await this.getEscrowContract(escrowAddress);
 
