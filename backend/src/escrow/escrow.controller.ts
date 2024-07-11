@@ -7,14 +7,21 @@ import {
   Post,
 } from '@nestjs/common';
 import { EscrowService } from './escrow.service';
-import { AddressParamDto, DepositRequestDto, SaleDetailsDto } from './dtos';
+import {
+  AddressParamDto,
+  DepositRequestDto,
+  RequestWithUserDto,
+  SaleDetailsDto,
+} from './dtos';
 import { ContractNotFoundError } from './errors';
+import { ApiParam } from '@nestjs/swagger';
 
 @Controller('escrow')
 export class EscrowController {
   constructor(private readonly escrowService: EscrowService) {}
 
-  @Post(':address')
+  @ApiParam({ name: 'address' })
+  @Post(':address/deposit')
   async deposit(
     @Param() { address }: AddressParamDto,
     @Body() depositRequest: DepositRequestDto,
@@ -25,9 +32,32 @@ export class EscrowController {
       if (error instanceof ContractNotFoundError) {
         throw new NotFoundException(error.message);
       }
+
+      throw error;
     }
   }
 
+  @ApiParam({ name: 'address' })
+  @Post(':address/confirm-delivery')
+  async confirmDelivery(
+    @Param() { address }: AddressParamDto,
+    @Body() confirmDeliveryRequest: RequestWithUserDto,
+  ): Promise<string> {
+    try {
+      return await this.escrowService.confirmDelivery(
+        confirmDeliveryRequest,
+        address,
+      );
+    } catch (error) {
+      if (error instanceof ContractNotFoundError) {
+        throw new NotFoundException(error.message);
+      }
+
+      throw error;
+    }
+  }
+
+  @ApiParam({ name: 'address' })
   @Get(':address')
   async getSaleDetails(
     @Param() { address }: AddressParamDto,

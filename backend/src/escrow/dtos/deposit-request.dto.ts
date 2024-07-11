@@ -1,11 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEthereumAddress, IsNumber, IsPositive } from 'class-validator';
+import { IsNumber, IsPositive } from 'class-validator';
+import { RequestWithUserDto } from './request-with-user.dto';
 
-export class DepositRequestDto {
-  @ApiProperty()
-  @IsEthereumAddress()
-  buyer: string;
-
+export class DepositRequestDto extends RequestWithUserDto {
   @ApiProperty()
   @IsNumber()
   @IsPositive()
