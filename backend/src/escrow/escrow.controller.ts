@@ -1,21 +1,45 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  NotFoundException,
+  Param,
+  Post,
+} from '@nestjs/common';
 import { EscrowService } from './escrow.service';
-import { DepositRequestDto, SaleDetailsDto } from './dtos';
+import { AddressParamDto, DepositRequestDto, SaleDetailsDto } from './dtos';
+import { ContractNotFoundError } from './errors';
 
 @Controller('escrow')
 export class EscrowController {
   constructor(private readonly escrowService: EscrowService) {}
 
   @Post(':address')
-  deposit(
-    @Param('address') address: string,
+  async deposit(
+    @Param() { address }: AddressParamDto,
     @Body() depositRequest: DepositRequestDto,
   ): Promise<string> {
-    return this.escrowService.deposit(depositRequest, address);
+    try {
+      return await this.escrowService.deposit(depositRequest, address);
+    } catch (error) {
+      if (error instanceof ContractNotFoundError) {
+        throw new NotFoundException(error.message);
+      }
+    }
   }
 
   @Get(':address')
-  getSaleDetails(@Param('address') address: string): Promise<SaleDetailsDto> {
-    return this.escrowService.getSaleDetails(address);
+  async getSaleDetails(
+    @Param() { address }: AddressParamDto,
+  ): Promise<SaleDetailsDto> {
+    try {
+      return await this.escrowService.getSaleDetails(address);
+    } catch (error) {
+      if (error instanceof ContractNotFoundError) {
+        throw new NotFoundException(error.message);
+      }
+
+      throw error;
+    }
   }
 }

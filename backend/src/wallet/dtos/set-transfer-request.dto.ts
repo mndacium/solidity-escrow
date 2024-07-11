@@ -1,12 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsString } from 'class-validator';
+import { IsEthereumAddress, IsNumber, IsPositive } from 'class-validator';
 
 export class SetTransferRequestDto {
   @ApiProperty()
-  @IsString()
+  @IsEthereumAddress()
   toWallet: string;
 
   @ApiProperty()
   @IsNumber()
+  @IsPositive()
   amount: number;
 }

@@ -1,20 +1,21 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsString } from 'class-validator';
+import { IsEthereumAddress, IsNumber, IsPositive } from 'class-validator';
 
 export class CreateEscrowRequestDto {
   @ApiProperty()
-  @IsString()
+  @IsEthereumAddress()
   buyer: string;
 
   @ApiProperty()
-  @IsString()
+  @IsEthereumAddress()
   seller: string;
 
   @ApiProperty()
-  @IsString()
+  @IsEthereumAddress()
   arbiter: string;
 
   @ApiProperty()
   @IsNumber()
+  @IsPositive()
   amount: number;
 }

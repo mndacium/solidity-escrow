@@ -24,33 +24,30 @@ export class EscrowFactoryService {
       this.configService.getOrThrow('ESCROW_FACTORY_ADDRESS'),
     );
 
-    try {
-      const createEscrowTx = factory.methods.createEscrow(
-        buyer,
-        seller,
-        arbiter,
-        amount,
-      );
+    const createEscrowTx = factory.methods.createEscrow(
+      buyer,
+      seller,
+      arbiter,
+      amount,
+    );
 
-      const createTransaction = await this.web3.eth.accounts.signTransaction(
-        {
-          from: arbiter,
-          to: this.configService.getOrThrow('ESCROW_FACTORY_ADDRESS'),
-          data: createEscrowTx.encodeABI(),
-          gas: await createEscrowTx.estimateGas(),
-          gasPrice: await this.web3.eth.getGasPrice(),
-          nonce: await this.web3.eth.getTransactionCount(arbiter),
-        },
-        this.configService.getOrThrow('ARBITER_PRIVATE_KEY'),
-      );
+    const createTransaction = await this.web3.eth.accounts.signTransaction(
+      {
+        from: arbiter,
+        to: this.configService.getOrThrow('ESCROW_FACTORY_ADDRESS'),
+        data: createEscrowTx.encodeABI(),
+        gas: await createEscrowTx.estimateGas(),
+        gasPrice: await this.web3.eth.getGasPrice(),
+        nonce: await this.web3.eth.getTransactionCount(arbiter),
+      },
+      this.configService.getOrThrow('ARBITER_PRIVATE_KEY'),
+    );
 
-      const createReceipt = await this.web3.eth.sendSignedTransaction(
-        createTransaction.rawTransaction,
-      );
-      return createReceipt.transactionHash.toString();
-    } catch (err) {
-      console.log(err);
-    }
+    const createReceipt = await this.web3.eth.sendSignedTransaction(
+      createTransaction.rawTransaction,
+    );
+
+    return createReceipt.transactionHash.toString();
   }
 
   async getEscrows(): Promise<string[]> {
