@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
 import { WalletService } from './wallet.service';
+import { SetTransferRequestDto } from './dtos';
 
 @Controller('wallet')
 export class WalletController {
@@ -11,10 +12,7 @@ export class WalletController {
   }
 
   @Post()
-  setTransfer(
-    @Body('toWallet') toWallet: string,
-    @Body('value') value: number,
-  ) {
-    return this.walletService.setTransfer(toWallet, value);
+  setTransfer(@Body() setTransferRequest: SetTransferRequestDto) {
+    return this.walletService.setTransfer(setTransferRequest);
   }
 }

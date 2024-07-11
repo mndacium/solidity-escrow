@@ -4,6 +4,7 @@ import * as EscrowAbi from 'contracts/abis/Escrow.abi.json';
 import { ConfigService } from '@nestjs/config';
 import { EscrowFactoryService } from 'src/escrow-factory/escrow-factory.service';
 import { JSONParseBigInt } from 'src/utils';
+import { DepositRequestDto, SaleDetailsDto } from './dtos';
 
 @Injectable()
 export class EscrowService {
@@ -15,13 +16,11 @@ export class EscrowService {
 
   web3 = this.web3Service.getWeb3();
 
-  async deposit(buyer: string, escrowAddress: string, amount: number) {
+  async deposit({ buyer, amount }: DepositRequestDto, escrowAddress: string) {
     try {
       const escrow = await this.getEscrowContract(escrowAddress);
 
       const depositTx = await escrow.methods.deposit();
-
-      console.log(amount);
 
       const depositTransaction = await this.web3.eth.accounts.signTransaction(
         {
@@ -42,19 +41,26 @@ export class EscrowService {
       const depositReceipt = await this.web3.eth.sendSignedTransaction(
         depositTransaction.rawTransaction,
       );
-      console.log(`Tx successful with hash: ${depositReceipt.transactionHash}`);
+
+      return depositReceipt.transactionHash.toString();
     } catch (err) {
       console.log(err);
     }
   }
 
-  async getSaleDetails(escrowAddress: string) {
+  async getSaleDetails(escrowAddress: string): Promise<SaleDetailsDto> {
     try {
       const escrow = await this.getEscrowContract(escrowAddress);
 
-      const saleDetails: any = await escrow.methods.getSaleDetails().call();
+      const saleDetails = await escrow.methods.getSaleDetails().call();
 
-      return JSONParseBigInt(saleDetails);
+      return {
+        buyer: saleDetails[0],
+        seller: saleDetails[1],
+        arbiter: saleDetails[2],
+        amount: saleDetails[3].toString(),
+        currentState: saleDetails[4].toString(),
+      };
     } catch (err) {
       console.log(err);
     }

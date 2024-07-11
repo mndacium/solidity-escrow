@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Web3Service } from 'src/web3';
 import * as EscrowFactoryAbi from 'contracts/abis/EscrowFactory.abi.json';
 import { ConfigService } from '@nestjs/config';
+import { CreateEscrowRequestDto } from './dtos';
 
 @Injectable()
 export class EscrowFactoryService {
@@ -12,12 +13,12 @@ export class EscrowFactoryService {
 
   web3 = this.web3Service.getWeb3();
 
-  async createEscrow(
-    buyer: string,
-    seller: string,
-    arbiter: string,
-    contractAmount: number,
-  ) {
+  async createEscrow({
+    buyer,
+    seller,
+    arbiter,
+    amount,
+  }: CreateEscrowRequestDto) {
     const factory = new this.web3.eth.Contract(
       EscrowFactoryAbi,
       this.configService.getOrThrow('ESCROW_FACTORY_ADDRESS'),
@@ -28,7 +29,7 @@ export class EscrowFactoryService {
         buyer,
         seller,
         arbiter,
-        contractAmount,
+        amount,
       );
 
       const createTransaction = await this.web3.eth.accounts.signTransaction(
@@ -46,7 +47,7 @@ export class EscrowFactoryService {
       const createReceipt = await this.web3.eth.sendSignedTransaction(
         createTransaction.rawTransaction,
       );
-      console.log(`Tx successful with hash: ${createReceipt.transactionHash}`);
+      return createReceipt.transactionHash.toString();
     } catch (err) {
       console.log(err);
     }

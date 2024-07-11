@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
 import { EscrowFactoryService } from './escrow-factory.service';
+import { CreateEscrowRequestDto } from './dtos';
 
 @Controller('escrow-factory')
 export class EscrowFactoryController {
@@ -7,21 +8,13 @@ export class EscrowFactoryController {
 
   @Post()
   createEscrow(
-    @Body('buyer') buyer: string,
-    @Body('seller') seller: string,
-    @Body('arbiter') arbiter: string,
-    @Body('contractAmount') contractAmount: number,
-  ) {
-    return this.escrowFactoryService.createEscrow(
-      buyer,
-      seller,
-      arbiter,
-      contractAmount,
-    );
+    @Body() createEscrowRequest: CreateEscrowRequestDto,
+  ): Promise<string> {
+    return this.escrowFactoryService.createEscrow(createEscrowRequest);
   }
 
   @Get()
-  getEscrows() {
+  getEscrows(): Promise<string[]> {
     return this.escrowFactoryService.getEscrows();
   }
 }

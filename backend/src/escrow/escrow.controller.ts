@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { EscrowService } from './escrow.service';
+import { DepositRequestDto, SaleDetailsDto } from './dtos';
 
 @Controller('escrow')
 export class EscrowController {
@@ -8,14 +9,13 @@ export class EscrowController {
   @Post(':address')
   deposit(
     @Param('address') address: string,
-    @Body('buyer') buyer: string,
-    @Body('contractAmount') amount: number,
-  ) {
-    return this.escrowService.deposit(buyer, address, amount);
+    @Body() depositRequest: DepositRequestDto,
+  ): Promise<string> {
+    return this.escrowService.deposit(depositRequest, address);
   }
 
   @Get(':address')
-  getSaleDetails(@Param('address') address: string) {
+  getSaleDetails(@Param('address') address: string): Promise<SaleDetailsDto> {
     return this.escrowService.getSaleDetails(address);
   }
 }
